@@ -5,21 +5,34 @@ const parseStringAsArray = require('../utils/parseStringAsArray');
 module.exports = {
     async find(request, response) {
         const { latitude, longitude, stack } = request.query;
+        
+        const filterDefinitions = {};
 
-        const devs = await Dev.find({
-            stack: {
-                $in: parseStringAsArray(stack),
-            },
-            location: {
-                $near: {
-                    $geometry: {
-                      type: 'Point',
-                      coordinates: [ longitude, latitude ],
+        if (latitude && longitude) {
+            filterDefinitions = {
+                ...filterDefinitions,
+                location: {
+                    $near: {
+                        $geometry: {
+                          type: 'Point',
+                          coordinates: [ longitude, latitude ],
+                        },
+                        $maxDistance: 10000,
                     },
-                    $maxDistance: 10000,
+                },    
+            }
+        }
+
+        if (stack) {
+            filterDefinitions = {
+                ...filterDefinitions,
+                stack: {
+                    $in: parseStringAsArray(stack),
                 },
-            },
-        });
+            }
+        }
+
+        const devs = await Dev.find(filterDefinitions);
 
         return response.json({ devs });
     },
