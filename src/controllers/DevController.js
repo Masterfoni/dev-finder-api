@@ -5,8 +5,8 @@ const parseStringAsArray = require('../utils/parseStringAsArray');
 module.exports = {
     async find(request, response) {
         const { latitude, longitude, stack } = request.query;
-        
-        const filterDefinitions = {};
+
+        let filterDefinitions = {};
 
         if (latitude && longitude) {
             filterDefinitions = {
