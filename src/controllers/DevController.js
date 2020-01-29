@@ -1,6 +1,7 @@
 const axios = require('axios');
 const Dev = require('../models/Dev');
 const parseStringAsArray = require('../utils/parseStringAsArray');
+const { findConnections, sendMessage } = require('../websocket');
 
 module.exports = {
     async find(request, response) {
@@ -43,7 +44,7 @@ module.exports = {
         return response.json(dev);
     },
 
-    async store(request, response) {
+    async create(request, response) {
         const { github_username, stack, latitude, longitude } = request.body;
     
         let dev = await Dev.findOne({ github_username });
@@ -53,7 +54,7 @@ module.exports = {
         
             const { name = login, avatar_url, bio } = apiResponse.data;
         
-            const techArray = parseStringAsArray(stack);
+            const stackArray = parseStringAsArray(stack);
         
             const location = {
                 type: 'Point',
@@ -65,9 +66,16 @@ module.exports = {
                 name,
                 avatar_url,
                 bio,
-                stack: techArray,
+                stack: stackArray,
                 location
             });
+
+            const sendSocketMessageTo = findConnections(
+                { latitude, longitude },
+                stackArray,
+            );
+
+            sendMessage(sendSocketMessageTo, 'new-dev', dev);
         }
 
     
